@@ -1,10 +1,13 @@
 """File I/O functions for loading mesh, rigid bodies, and sample data."""
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
 
+from .geometry import build_triangle_accelerator
 from .models import RigidBody, SampleFrame
 
 
@@ -16,7 +19,11 @@ def _parse_floats_from_line(line: str, expected_count: int | None = None) -> np.
     return np.array([float(tok) for tok in tokens[:expected_count]], dtype=float)
 
 
-def load_mesh(path: Path) -> Tuple[np.ndarray, np.ndarray]:
+def load_mesh(
+    path: Path,
+    *,
+    build_accelerator: bool = True,
+) -> Tuple[np.ndarray, np.ndarray, object | None]:
     """
     Load a mesh from a .sur file.
     
@@ -24,6 +31,7 @@ def load_mesh(path: Path) -> Tuple[np.ndarray, np.ndarray]:
         Tuple of (vertices, triangles) where:
         - vertices: shape (N, 3) array of vertex coordinates
         - triangles: shape (M, 3) array of triangle vertex indices
+        - accelerator: KD-tree accelerator (or None if disabled / SciPy missing)
     """
     with path.open("r", encoding="utf-8") as fh:
         num_vertices_line = fh.readline()
@@ -57,7 +65,10 @@ def load_mesh(path: Path) -> Tuple[np.ndarray, np.ndarray]:
                 raise ValueError(f"Triangle record must contain 3 vertex indices: {line}")
             triangles[i] = np.array(tokens[:3], dtype=np.int32)
 
-    return vertices, triangles
+    accelerator = (
+        build_triangle_accelerator(vertices, triangles) if build_accelerator else None
+    )
+    return vertices, triangles, accelerator
 
 
 def load_rigid_body(path: Path) -> RigidBody:

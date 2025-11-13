@@ -1,9 +1,51 @@
 """Geometry functions for computing closest points on triangles and meshes."""
 
+from __future__ import annotations
+
 import math
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
+
+try:  # Optional dependency used for acceleration
+    from scipy.spatial import cKDTree  # type: ignore
+except Exception:  # pragma: no cover - SciPy is listed in requirements, but keep fallback
+    cKDTree = None
+
+
+def build_triangle_accelerator(
+    vertices: np.ndarray, triangles: np.ndarray, k: int = 32
+) -> Dict[str, object]:
+    """
+    Build a KD-tree accelerator for mesh triangle queries.
+
+    The accelerator stores triangle centroids in a SciPy ``cKDTree`` along with
+    per-triangle bounding radii. This lets ``closest_point_on_mesh`` quickly
+    shortlist candidate triangles before running the exact projection. When
+    SciPy is unavailable, the returned structure encodes ``tree=None`` so the
+    caller transparently falls back to brute-force iteration.
+
+    Args:
+        vertices: Mesh vertices, shape (N, 3)
+        triangles: Triangle indices, shape (M, 3)
+        k: Number of nearest centroids to sample for the initial guess
+
+    Returns:
+        Dictionary containing the KD-tree and auxiliary metadata.
+    """
+    tri_vertices = vertices[triangles]  # (M, 3, 3)
+    centroids = tri_vertices.mean(axis=1)
+    radii = np.linalg.norm(tri_vertices - centroids[:, None, :], axis=2).max(axis=1)
+    max_radius = float(radii.max()) if len(radii) else 0.0
+
+    tree = cKDTree(centroids) if cKDTree is not None and len(centroids) else None
+    return {
+        "tree": tree,
+        "centroids": centroids,
+        "radii": radii,
+        "max_radius": max_radius,
+        "k": max(1, int(k)),
+    }
 
 
 def closest_point_on_triangle(
@@ -66,18 +108,24 @@ def closest_point_on_triangle(
 
 
 def closest_point_on_mesh(
-    point: np.ndarray, vertices: np.ndarray, triangles: np.ndarray
+    point: np.ndarray,
+    vertices: np.ndarray,
+    triangles: np.ndarray,
+    accel: Optional[Dict[str, object]] = None,
 ) -> Tuple[np.ndarray, float]:
     """
     Find the closest point on a mesh surface to a given point.
     
-    Iterates through all triangles in the mesh and finds the closest point
-    on any triangle, returning the overall closest point and distance.
+    When an acceleration structure built via :func:`build_triangle_accelerator`
+    is provided, a SciPy KD-tree narrows the search to nearby triangles before
+    running the exact projection. If no accelerator is supplied (or SciPy is
+    unavailable), the function falls back to the original brute-force search.
     
     Args:
         point: Query point, shape (3,)
         vertices: Mesh vertices, shape (N, 3)
         triangles: Triangle vertex indices, shape (M, 3)
+        accel: Optional dictionary returned by ``build_triangle_accelerator``
     
     Returns:
         Tuple of (closest_point, distance) where:
@@ -86,15 +134,67 @@ def closest_point_on_mesh(
     """
     best_point = None
     best_dist_sq = math.inf
-    for tri_indices in triangles:
+
+    candidate_indices = None
+    considered: set[int] = set()
+
+    if accel is not None and accel.get("tree") is not None:
+        tree: cKDTree = accel["tree"]  # type: ignore[assignment]
+        k = min(int(accel.get("k", 32) or 32), len(triangles))
+        distances, indices = tree.query(point, k=k)
+        indices = np.atleast_1d(indices).astype(int)
+        candidate_indices = [idx for idx in indices if idx >= 0]
+    else:
+        candidate_indices = list(range(len(triangles)))
+
+    def _evaluate(index: int, point_array: np.ndarray) -> None:
+        nonlocal best_point, best_dist_sq
+        tri_indices = triangles[index]
         a = vertices[tri_indices[0]]
         b = vertices[tri_indices[1]]
         c = vertices[tri_indices[2]]
-        candidate = closest_point_on_triangle(point, (a, b, c))
-        dist_sq = np.sum((candidate - point) ** 2)
+        candidate = closest_point_on_triangle(point_array, (a, b, c))
+        dist_sq = np.sum((candidate - point_array) ** 2)
         if dist_sq < best_dist_sq:
             best_dist_sq = dist_sq
             best_point = candidate
+
+    for idx in candidate_indices or []:
+        if idx in considered:
+            continue
+        considered.add(idx)
+        _evaluate(idx, point)
+
+    if accel is not None and accel.get("tree") is not None:
+        centroids: np.ndarray = accel["centroids"]  # type: ignore[assignment]
+        radii: np.ndarray = accel["radii"]  # type: ignore[assignment]
+        max_radius: float = float(accel.get("max_radius", 0.0))
+
+        if best_point is None:
+            # No candidates processed (e.g., empty triangles): fall back to brute force loop below.
+            candidate_indices = None
+        else:
+            best_distance = math.sqrt(best_dist_sq)
+            search_radius = best_distance + max_radius
+            tree: cKDTree = accel["tree"]  # type: ignore[assignment]
+            neighbors = tree.query_ball_point(point, r=search_radius)
+            for idx in neighbors:
+                if idx in considered:
+                    continue
+                # Bounding-sphere culling
+                centroid = centroids[idx]
+                if np.linalg.norm(centroid - point) - radii[idx] > best_distance:
+                    continue
+                considered.add(idx)
+                _evaluate(idx, point)
+
+    if best_point is None:
+        # Fallback brute-force evaluation (handles empty accel or empty candidate list)
+        for tri_idx in range(len(triangles)):
+            if tri_idx in considered:
+                continue
+            _evaluate(tri_idx, point)
+
     if best_point is None:
         raise RuntimeError("No triangles were processed when searching for closest point.")
     return best_point, math.sqrt(best_dist_sq)

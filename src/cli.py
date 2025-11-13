@@ -50,14 +50,14 @@ def main() -> None:
     """Main entry point for PA3 matching computation."""
     args = parse_args()
 
-    vertices, triangles = load_mesh(args.mesh)
+    vertices, triangles, mesh_accel = load_mesh(args.mesh)
     body_a = load_rigid_body(args.body_a)
     body_b = load_rigid_body(args.body_b)
     samples, _sample_label = load_samples(
         args.samples, num_a=body_a.markers.shape[0], num_b=body_b.markers.shape[0]
     )
 
-    results = compute_matches(vertices, triangles, body_a, body_b, samples)
+    results = compute_matches(vertices, triangles, body_a, body_b, samples, mesh_accel)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", encoding="utf-8") as fh:

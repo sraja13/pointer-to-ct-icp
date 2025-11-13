@@ -5,7 +5,7 @@ sample frame and locate the closest point on the mesh surface.
 """
 
 from .cli import main
-from .geometry import closest_point_on_mesh, closest_point_on_triangle
+from .geometry import build_triangle_accelerator, closest_point_on_mesh, closest_point_on_triangle
 from .io import load_mesh, load_rigid_body, load_samples
 from .matching import compute_matches
 from .models import MatchResult, RigidBody, SampleFrame
@@ -24,6 +24,7 @@ __all__ = [
     "invert_transform",
     "transform_point",
     "closest_point_on_triangle",
+    "build_triangle_accelerator",
     "closest_point_on_mesh",
     "compute_matches",
     "format_output_line",

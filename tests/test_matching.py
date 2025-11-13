@@ -217,7 +217,7 @@ class TestMatchingWithRealData:
     )
     def test_compute_matches_against_expected_outputs(self, letter, abs_tol, coord_tol):
         """Validate compute_matches against the official PA3 A–C answer keys. Confirms each computed sample, closest point, and distance matches the expected reference within tolerance."""
-        vertices, triangles = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
+        vertices, triangles, mesh_accel = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
         body_a = load_rigid_body(DATA_ROOT / "Problem3-BodyA.txt")
         body_b = load_rigid_body(DATA_ROOT / "Problem3-BodyB.txt")
         samples, _ = load_samples(
@@ -226,7 +226,7 @@ class TestMatchingWithRealData:
             num_b=body_b.markers.shape[0],
         )
         
-        results = compute_matches(vertices, triangles, body_a, body_b, samples)
+        results = compute_matches(vertices, triangles, body_a, body_b, samples, mesh_accel)
         expected = self._load_expected(DATA_ROOT / f"PA3-{letter}-Debug-Answer.txt")
         
         # Verify all results match expected
@@ -243,7 +243,7 @@ class TestMatchingWithRealData:
 
     def test_compute_matches_first_sample_pa3a(self):
         """Validate compute_matches for the first PA3-A sample in detail. Confirms the returned sample point, closest point, and distance equal the published expected values."""
-        vertices, triangles = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
+        vertices, triangles, mesh_accel = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
         body_a = load_rigid_body(DATA_ROOT / "Problem3-BodyA.txt")
         body_b = load_rigid_body(DATA_ROOT / "Problem3-BodyB.txt")
         samples, _ = load_samples(
@@ -254,7 +254,7 @@ class TestMatchingWithRealData:
         
         # Test just the first sample
         first_sample = [samples[0]]
-        results = compute_matches(vertices, triangles, body_a, body_b, first_sample)
+        results = compute_matches(vertices, triangles, body_a, body_b, first_sample, mesh_accel)
         
         assert len(results) == 1
         result = results[0]

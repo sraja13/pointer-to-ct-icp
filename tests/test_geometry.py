@@ -11,7 +11,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.geometry import closest_point_on_mesh, closest_point_on_triangle
+from src.geometry import (
+    build_triangle_accelerator,
+    closest_point_on_mesh,
+    closest_point_on_triangle,
+)
 from src.io import load_mesh, load_rigid_body, load_samples
 from src.matching import compute_matches
 from src.transforms import invert_transform, point_cloud_registration, transform_point
@@ -175,6 +179,24 @@ class TestClosestPointOnMesh:
         assert np.allclose(closest, point, atol=1e-10)
         assert abs(distance) < 1e-10
 
+    def test_accelerated_mesh_query_matches_bruteforce(self):
+        """Verify the KD-tree accelerator returns the same answer as brute force. Confirms the accelerated closest point and distance match the reference result."""
+        vertices = np.array([
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
+        ])
+        triangles = np.array([[0, 1, 2], [0, 1, 3]], dtype=np.int32)
+        point = np.array([0.3, 0.2, 0.4])
+
+        accel = build_triangle_accelerator(vertices, triangles)
+        accelerated = closest_point_on_mesh(point, vertices, triangles, accel=accel)
+        brute = closest_point_on_mesh(point, vertices, triangles)
+
+        assert np.allclose(accelerated[0], brute[0], atol=1e-10)
+        assert math.isclose(accelerated[1], brute[1], rel_tol=1e-10, abs_tol=1e-12)
+
     def test_point_on_triangle(self):
         """Verify closest_point_on_mesh leaves a point on the surface unchanged. Confirms the distance is zero and coordinates match exactly."""
         vertices = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
@@ -231,7 +253,7 @@ class TestGeometryWithRealData:
     @pytest.fixture(scope="class")
     def pa3_data(self):
         """Provide the PA3-A dataset for comparative testing. Confirms consumers receive vertices, triangles, and sample frames identical to the reference files."""
-        vertices, triangles = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
+        vertices, triangles, mesh_accel = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
         body_a = load_rigid_body(DATA_ROOT / "Problem3-BodyA.txt")
         body_b = load_rigid_body(DATA_ROOT / "Problem3-BodyB.txt")
         samples, _ = load_samples(
@@ -239,11 +261,11 @@ class TestGeometryWithRealData:
             num_a=body_a.markers.shape[0],
             num_b=body_b.markers.shape[0],
         )
-        return vertices, triangles, body_a, body_b, samples
+        return vertices, triangles, mesh_accel, body_a, body_b, samples
 
     def test_closest_point_on_mesh_with_pa3_data(self, pa3_data):
         """Validate closest_point_on_mesh against the PA3-A reference sample. Confirms the computed tip projection and distance match the official expected values."""
-        vertices, triangles, body_a, body_b, samples = pa3_data
+        vertices, triangles, mesh_accel, body_a, body_b, samples = pa3_data
         
         # Compute tip position for first sample
         transform_a = point_cloud_registration(body_a.markers, samples[0].markers_a)
@@ -253,7 +275,9 @@ class TestGeometryWithRealData:
         sample_point = transform_point(np.eye(4, dtype=float), tip_in_b)
         
         # Find closest point on mesh
-        closest_point, distance = closest_point_on_mesh(sample_point, vertices, triangles)
+        closest_point, distance = closest_point_on_mesh(
+            sample_point, vertices, triangles, accel=mesh_accel
+        )
         
         # Expected values from PA3-A-Debug-Answer.txt (first sample)
         expected_sample = np.array([28.51, 14.33, 17.70])
@@ -270,7 +294,7 @@ class TestGeometryWithRealData:
 
     def test_closest_point_multiple_samples(self, pa3_data):
         """Validate closest_point_on_mesh against several PA3-A samples. Confirms each computed projection aligns with the corresponding expected coordinates and zero distance."""
-        vertices, triangles, body_a, body_b, samples = pa3_data
+        vertices, triangles, mesh_accel, body_a, body_b, samples = pa3_data
         
         # Test first 3 samples
         expected_samples = [
@@ -291,7 +315,9 @@ class TestGeometryWithRealData:
             tip_in_b = transform_point(invert_transform(transform_b), tip_in_tracker)
             sample_point = transform_point(np.eye(4, dtype=float), tip_in_b)
             
-            closest_point, distance = closest_point_on_mesh(sample_point, vertices, triangles)
+            closest_point, distance = closest_point_on_mesh(
+                sample_point, vertices, triangles, accel=mesh_accel
+            )
             
             assert np.allclose(sample_point, expected_samples[i], atol=1e-2)
             assert np.allclose(closest_point, expected_closest[i], atol=1e-2)

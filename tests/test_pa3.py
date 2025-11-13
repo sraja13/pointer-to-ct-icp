@@ -55,7 +55,7 @@ def _compare_results(
 
 def _run_dataset(letter: str):
     """Execute the full PA3 pipeline for a dataset letter. Confirms the function returns both the computed results and the loaded expected rows."""
-    mesh_vertices, mesh_triangles = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
+    mesh_vertices, mesh_triangles, mesh_accel = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
     body_a = load_rigid_body(DATA_ROOT / "Problem3-BodyA.txt")
     body_b = load_rigid_body(DATA_ROOT / "Problem3-BodyB.txt")
     samples, _ = load_samples(
@@ -63,7 +63,9 @@ def _run_dataset(letter: str):
         num_a=body_a.markers.shape[0],
         num_b=body_b.markers.shape[0],
     )
-    results = compute_matches(mesh_vertices, mesh_triangles, body_a, body_b, samples)
+    results = compute_matches(
+        mesh_vertices, mesh_triangles, body_a, body_b, samples, mesh_accel
+    )
     expected = _load_expected(DATA_ROOT / f"PA3-{letter}-Debug-Answer.txt")
     return results, expected
 

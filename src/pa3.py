@@ -2,14 +2,14 @@
 """
 PA3 matching phase for a simplified ICP pipeline.
 
-This script parses the provided mesh, rigid-body definition, and sample readings
+Goes through the provided mesh, rigid body definition, and sample readings
 files to compute the pointer tip position for each sample frame and locate the
 closest point on the mesh surface. Results are written in the format prescribed
 for PA3 output files.
 """
 
-# Re-export all public functions for backward compatibility
-# Handle both relative imports (when run as module) and absolute imports (when imported directly)
+# Rport all public functions for backward compatibility
+# Both relative imports (when run as module) and absolute imports (when imported directly)
 try:
     from .cli import main
     from .geometry import closest_point_on_mesh, closest_point_on_triangle

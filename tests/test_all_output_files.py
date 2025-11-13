@@ -98,7 +98,7 @@ def _compare_output_files(
 
 def _compute_and_save_output(letter: str, output_path: Path):
     """Compute matches for a dataset and save to output file."""
-    mesh_vertices, mesh_triangles = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
+    mesh_vertices, mesh_triangles, mesh_accel = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
     body_a = load_rigid_body(DATA_ROOT / "Problem3-BodyA.txt")
     body_b = load_rigid_body(DATA_ROOT / "Problem3-BodyB.txt")
     samples, _ = load_samples(
@@ -106,7 +106,9 @@ def _compute_and_save_output(letter: str, output_path: Path):
         num_a=body_a.markers.shape[0],
         num_b=body_b.markers.shape[0],
     )
-    results = compute_matches(mesh_vertices, mesh_triangles, body_a, body_b, samples)
+    results = compute_matches(
+        mesh_vertices, mesh_triangles, body_a, body_b, samples, mesh_accel
+    )
     
     # Save to output file
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -170,7 +172,7 @@ class TestAllOutputFiles:
     def test_computed_results_against_debug_answers(self, letter: str, abs_tol: float, coord_tol: float):
         """Validate freshly computed matches against Debug-Answer files. Confirms each computed record reproduces the expected sample, closest point, and distance."""
         # Load data and compute
-        mesh_vertices, mesh_triangles = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
+        mesh_vertices, mesh_triangles, mesh_accel = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
         body_a = load_rigid_body(DATA_ROOT / "Problem3-BodyA.txt")
         body_b = load_rigid_body(DATA_ROOT / "Problem3-BodyB.txt")
         samples, _ = load_samples(
@@ -178,7 +180,9 @@ class TestAllOutputFiles:
             num_a=body_a.markers.shape[0],
             num_b=body_b.markers.shape[0],
         )
-        results = compute_matches(mesh_vertices, mesh_triangles, body_a, body_b, samples)
+        results = compute_matches(
+            mesh_vertices, mesh_triangles, body_a, body_b, samples, mesh_accel
+        )
         
         # Load expected
         answer_file = OUTPUT_ROOT / f"PA3-{letter}-Debug-Answer.txt"
@@ -269,7 +273,7 @@ class TestAllOutputFiles:
 
         _, frame_count = _read_sample_header(sample_file)
 
-        mesh_vertices, mesh_triangles = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
+        mesh_vertices, mesh_triangles, mesh_accel = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
         body_a = load_rigid_body(DATA_ROOT / "Problem3-BodyA.txt")
         body_b = load_rigid_body(DATA_ROOT / "Problem3-BodyB.txt")
         samples, _ = load_samples(
@@ -281,7 +285,9 @@ class TestAllOutputFiles:
         assert len(samples) == frame_count, \
             f"Expected {frame_count} frames, got {len(samples)} for PA3-{letter}"
 
-        results = compute_matches(mesh_vertices, mesh_triangles, body_a, body_b, samples)
+        results = compute_matches(
+            mesh_vertices, mesh_triangles, body_a, body_b, samples, mesh_accel
+        )
         assert len(results) == frame_count
 
         for idx, result in enumerate(results):
@@ -343,7 +349,9 @@ class TestOutputFileConsistency:
                 continue
             
             # Compute fresh results
-            mesh_vertices, mesh_triangles = load_mesh(DATA_ROOT / "Problem3Mesh.sur")
+            mesh_vertices, mesh_triangles, mesh_accel = load_mesh(
+                DATA_ROOT / "Problem3Mesh.sur"
+            )
             body_a = load_rigid_body(DATA_ROOT / "Problem3-BodyA.txt")
             body_b = load_rigid_body(DATA_ROOT / "Problem3-BodyB.txt")
             
@@ -356,7 +364,9 @@ class TestOutputFileConsistency:
                 num_a=body_a.markers.shape[0],
                 num_b=body_b.markers.shape[0],
             )
-            computed_results = compute_matches(mesh_vertices, mesh_triangles, body_a, body_b, samples)
+            computed_results = compute_matches(
+                mesh_vertices, mesh_triangles, body_a, body_b, samples, mesh_accel
+            )
             
             # Load saved output
             saved_output = _load_output_file(output_file)

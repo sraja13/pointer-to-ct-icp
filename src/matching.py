@@ -4,7 +4,9 @@ from typing import List
 
 import numpy as np
 
-from .geometry import closest_point_on_mesh
+from typing import Dict, Optional
+
+from .geometry import build_triangle_accelerator, closest_point_on_mesh
 from .models import MatchResult, RigidBody, SampleFrame
 from .transforms import invert_transform, point_cloud_registration, transform_point
 
@@ -15,6 +17,7 @@ def compute_matches(
     body_a: RigidBody,
     body_b: RigidBody,
     samples: List[SampleFrame],
+    mesh_accel: Optional[Dict[str, object]] = None,
 ) -> List[MatchResult]:
     """
     Compute closest point matches for all sample frames.
@@ -37,6 +40,8 @@ def compute_matches(
     """
     identity_registration = np.eye(4, dtype=float)
 
+    accel = mesh_accel or build_triangle_accelerator(vertices, triangles)
+
     results: List[MatchResult] = []
     for sample in samples:
         transform_a = point_cloud_registration(body_a.markers, sample.markers_a)
@@ -46,7 +51,9 @@ def compute_matches(
         tip_in_b = transform_point(invert_transform(transform_b), tip_in_tracker)
         sample_point = transform_point(identity_registration, tip_in_b)
 
-        surface_point, distance = closest_point_on_mesh(sample_point, vertices, triangles)
+        surface_point, distance = closest_point_on_mesh(
+            sample_point, vertices, triangles, accel=accel
+        )
         distance = float(np.linalg.norm(surface_point - sample_point))
         if distance < 1e-2:
             distance = 0.0

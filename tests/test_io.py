@@ -25,7 +25,7 @@ class TestLoadMesh:
             temp_path = Path(f.name)
 
         try:
-            vertices, triangles = load_mesh(temp_path)
+            vertices, triangles, accel = load_mesh(temp_path, build_accelerator=False)
             
             assert vertices.shape == (3, 3)
             assert triangles.shape == (1, 3)
@@ -33,6 +33,7 @@ class TestLoadMesh:
             assert np.allclose(vertices[1], [1.0, 0.0, 0.0])
             assert np.allclose(vertices[2], [0.0, 1.0, 0.0])
             assert np.array_equal(triangles[0], [0, 1, 2])
+            assert accel is None
         finally:
             temp_path.unlink()
 
@@ -46,12 +47,13 @@ class TestLoadMesh:
             temp_path = Path(f.name)
 
         try:
-            vertices, triangles = load_mesh(temp_path)
+            vertices, triangles, accel = load_mesh(temp_path, build_accelerator=False)
             
             assert vertices.shape == (2, 3)
             assert triangles.shape == (0, 3)
             assert np.allclose(vertices[0], [1.0, 2.0, 3.0])
             assert np.allclose(vertices[1], [4.0, 5.0, 6.0])
+            assert accel is None
         finally:
             temp_path.unlink()
 
@@ -62,7 +64,7 @@ class TestLoadMesh:
 
         try:
             with pytest.raises(ValueError, match="empty"):
-                load_mesh(temp_path)
+                load_mesh(temp_path, build_accelerator=False)
         finally:
             temp_path.unlink()
 
@@ -75,7 +77,7 @@ class TestLoadMesh:
 
         try:
             with pytest.raises(ValueError, match="Missing triangle count"):
-                load_mesh(temp_path)
+                load_mesh(temp_path, build_accelerator=False)
         finally:
             temp_path.unlink()
 
@@ -89,7 +91,7 @@ class TestLoadMesh:
 
         try:
             with pytest.raises(ValueError, match="Unexpected end of file"):
-                load_mesh(temp_path)
+                load_mesh(temp_path, build_accelerator=False)
         finally:
             temp_path.unlink()
 
@@ -106,7 +108,7 @@ class TestLoadMesh:
 
         try:
             with pytest.raises(ValueError, match="must contain 3 vertex indices"):
-                load_mesh(temp_path)
+                load_mesh(temp_path, build_accelerator=False)
         finally:
             temp_path.unlink()
 

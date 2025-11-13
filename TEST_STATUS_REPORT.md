@@ -4,9 +4,9 @@
 
 | Metric | Result |
 | --- | --- |
-| Overall status | All  tests passing |
-| Total tests (pytest) | 129 |
-| Test runtime | ~6.2 seconds |
+| Overall status | All automated tests passing |
+| Total tests (pytest) | 130 |
+| Test runtime | ~0.9 seconds |
 | Linter / static analysis | No issues reported |
 
 ---
@@ -18,7 +18,7 @@
 | Integration regression | `tests/test_pa3.py` | 6 | End-to-end PA3 pipeline for datasets A–F with per-dataset tolerances |
 | Expanded regression + file diffs | `tests/test_all_output_files.py` | 17 | Re-runs pipeline, compares against answer files, validates logfile, smoke-tests unknown datasets |
 | Transforms | `tests/test_transforms.py` | 20 | Rigid registration, transform inversion, transform application, PA3-A validation |
-| Geometry | `tests/test_geometry.py` | 20 | Triangle/mesh nearest-point logic, PA3-A validation |
+| Geometry | `tests/test_geometry.py` | 21 | Triangle/mesh nearest-point logic, PA3-A validation, KD-tree parity check |
 | I/O | `tests/test_io.py` | 18 | Mesh, rigid body, sample loading (happy paths + error cases) |
 | Matching | `tests/test_matching.py` | 10 | `compute_matches` with mock and real datasets (A–C) |
 | Output formatting | `tests/test_output.py` | 6 | Ensures numerical precision and string layout |
