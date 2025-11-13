@@ -51,7 +51,7 @@ then add it to GitHub.
 
 ## Dependencies
 
-We recommend using [Anaconda3](https://www.anaconda.com/products/individual) to manage your environments.
+Recommend using [Anaconda3](https://www.anaconda.com/products/individual) to manage environments.
 
 - MacOS: use the command line installer. From the terminal, run
 
@@ -88,7 +88,7 @@ conda env create -f environment.yml
 conda activate pointer-to-ct-icp
 ```
 
-Alternatively, if you prefer using pip:
+Alternatively, using pip:
 
 ```bash
 pip install -r requirements.txt
@@ -294,7 +294,7 @@ python3 -m pytest tests/test_pa3.py::test_pa3_debug_datasets -v
 - Synthetic unit tests ensure edge cases are enforced before large dataset runs.
 - Real-data tests reuse the course-provided PA3 debug files to guarantee output parity with the original script.
 
-- Tip: add the `-s` flag when you want to surface `print` statements or logging output during a failing test run.
+-add the `-s` flag when you want to surface `print` statements or logging output during a failing test run.
 
 ### Validation Results
 
