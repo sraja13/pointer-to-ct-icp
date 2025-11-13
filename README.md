@@ -94,7 +94,7 @@ Alternatively, if you prefer using pip:
 pip install -r requirements.txt
 ```
 
-The pip requirements install `numpy`, `scipy`, and `pytest` for local development.
+The pip requirements install `numpy` and `pytest` for local development.
 
 ## Mathematical Approach
 
@@ -191,11 +191,11 @@ Since the bone coordinate frame (Body B) and CT coordinates are assumed aligned 
 ### Step 5: Finding Closest Point on Surface Mesh
 
 For each pointer tip position `d_k`:
-e1. Query the triangle KD-tree (built once during mesh load) to shortlist nearby triangles
+1. Query the custom triangle KD-tree (built once during mesh load in `src/geometry.py`) to shortlist nearby triangles
 2. For each candidate triangle, compute the closest point on its surface using geometric projection
 3. Select the point `c_k` with minimum Euclidean distance: `min ||d_k - c_k||`
 
-The KD-tree leverages triangle centroids via `scipy.spatial.cKDTree` to avoid scanning the entire mesh, while the barycentric projection still handles vertex-, edge-, and interior-contact scenarios exactly.
+The hand-built KD-tree leverages triangle centroids and per-triangle bounding radii to avoid scanning the entire mesh, while the barycentric projection still handles vertex-, edge-, and interior-contact scenarios exactly.
 
 ### Step 6: Outputting Results
 
@@ -211,7 +211,7 @@ This program implements the matching phase algorithm through the following steps
 1. **Loads input data**: Mesh vertices/triangles, rigid body definitions (markers and tip positions), and sample readings
 2. **Computes rigid body transformations**: Uses SVD-based point cloud registration for each frame
 3. **Transforms pointer tip**: Applies transformations to compute tip positions in bone/CT coordinates
-4. **Finds closest points**: Uses a KD-tree accelerator to narrow the triangle set, then runs exact projections to find minimum Euclidean distance
+4. **Finds closest points**: Uses our custom KD-tree accelerator to narrow the triangle set, then runs exact projections to find minimum Euclidean distance
 5. **Outputs correspondences**: Writes tip coordinates, closest mesh points, and distances
 
 ### Running the Program
@@ -248,7 +248,7 @@ The output file contains one line per sample frame with:
 
 ### Testing
 
-All automated tests are written with [pytest](https://docs.pytest.org/en/stable/). The suite mixes focused unit tests, dataset driven integration checks, and file iff regressions 
+All automated tests are written with [pytest](https://docs.pytest.org/en/stable/). The suite mixes focused unit tests, dataset driven integration checks, and file regressions 
 **Quick commands**
 
 | Goal | Command |
@@ -333,9 +333,9 @@ Error_k = ||d_k - c_k|| = √((d_x - c_x)² + (d_y - c_y)² + (d_z - c_z)²)
 The codebase is organized into modular components:
 
 - `src/models.py` - Data classes (RigidBody, SampleFrame, MatchResult)
-- `src/io.py` - File I/O functions (mesh loader now builds a reusable KD-tree accelerator alongside the raw arrays)
+- `src/io.py` - File I/O functions (mesh loader now builds a reusable, custom KD-tree accelerator alongside the raw arrays)
 - `src/transforms.py` - Transform and registration functions
-- `src/geometry.py` - Geometry utilities (triangle projections plus optional KD-tree accelerated mesh queries)
+- `src/geometry.py` - Geometry utilities (triangle projections plus the hand-built KD-tree used to accelerate mesh queries)
 - `src/matching.py` - Main matching computation logic (reuses the mesh accelerator for fast nearest-point lookups)
 - `src/output.py` - Output formatting functions
 - `src/cli.py` - Command-line interface

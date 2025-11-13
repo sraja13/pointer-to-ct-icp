@@ -31,7 +31,7 @@ def load_mesh(
         Tuple of (vertices, triangles) where:
         - vertices: shape (N, 3) array of vertex coordinates
         - triangles: shape (M, 3) array of triangle vertex indices
-        - accelerator: KD-tree accelerator (or None if disabled / SciPy missing)
+        - accelerator: KD-tree accelerator (or None if disabled)
     """
     with path.open("r", encoding="utf-8") as fh:
         num_vertices_line = fh.readline()
