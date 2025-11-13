@@ -191,7 +191,7 @@ Since the bone coordinate frame (Body B) and CT coordinates are assumed aligned 
 ### Step 5: Finding Closest Point on Surface Mesh
 
 For each pointer tip position `d_k`:
-1. Query the triangle KD-tree (built once during mesh load) to shortlist nearby triangles
+e1. Query the triangle KD-tree (built once during mesh load) to shortlist nearby triangles
 2. For each candidate triangle, compute the closest point on its surface using geometric projection
 3. Select the point `c_k` with minimum Euclidean distance: `min ||d_k - c_k||`
 
@@ -248,13 +248,12 @@ The output file contains one line per sample frame with:
 
 ### Testing
 
-All automated tests are written with [pytest](https://docs.pytest.org/en/stable/). The suite mixes focused unit tests, dataset-driven integration checks, and file-diff regressions to guarantee the refactored package behaves exactly like the monolithic script.
-
+All automated tests are written with [pytest](https://docs.pytest.org/en/stable/). The suite mixes focused unit tests, dataset driven integration checks, and file iff regressions 
 **Quick commands**
 
 | Goal | Command |
 | --- | --- |
-| Run everything (recommended before submission) | `python3 -m pytest tests` |
+| Run everything | `python3 -m pytest tests` |
 | Stream stdout/stderr for debugging | `python3 -m pytest tests -s` |
 | Verbose per-test reporting | `python3 -m pytest tests -v` |
 | Stop after first failure (faster triage) | `python3 -m pytest tests --maxfail=1 -x` |
@@ -275,7 +274,7 @@ python3 -m pytest tests/test_transforms.py -v    # Rigid-body registration and t
 python3 -m pytest tests/test_matching.py -v      # Pointer-to-mesh matching logic
 python3 -m pytest tests/test_output.py -v        # Output line formatting
 
-# Drill into a single test (example)
+# Drill into a single test 
 python3 -m pytest tests/test_pa3.py::test_pa3_debug_datasets -v
 ```
 
