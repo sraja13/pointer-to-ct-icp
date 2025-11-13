@@ -1,4 +1,5 @@
 # pointer-to-ct-icp
+Authors: Sahana Raja & Rohit Satish
 
 PA3 matching phase for a simplified ICP (Iterative Closest Point) pipeline. This assignment computes pointer tip positions for each sample frame and locates the closest point on the mesh surface using rigid body transformations and geometric calculations.
 
@@ -22,7 +23,7 @@ The optical tracker measures LED marker positions on both bodies in the tracker 
 
 This creates point correspondences (between measured points and closest surface mesh points) that form the foundation for full ICP registration.
 
-If you use this template or any of the code within for your project, please cite
+Template Citation:
 
 ```bibtex
 @misc{benjamindkilleen2022Sep,
@@ -35,23 +36,10 @@ If you use this template or any of the code within for your project, please cite
 }
 ```
 
-## Aside on SSH Keys
-
-SSH keys are a more secure, less annoying alternative to typing your password every time you commit
-your code. This allows you to commit more often, leading to more granular code updates and a better
-sense of progress. When working on group projects, this is desirable to make sure everyone is
-working on the same code.
-
-[Here](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
-are the instructions for adding an ssh key to GitHub. If you don't know what an ssh key, first
-[check to see if your computer already has
-one](https://docs.github.com/en/articles/checking-for-existing-ssh-keys). If not, [generate
-one](https://docs.github.com/en/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent),
-then add it to GitHub.
 
 ## Dependencies
 
-Recommend using [Anaconda3](https://www.anaconda.com/products/individual) to manage environments.
+We recommend using [Anaconda3](https://www.anaconda.com/products/individual) to manage your environments.
 
 - MacOS: use the command line installer. From the terminal, run
 
