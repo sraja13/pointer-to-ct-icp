@@ -13,7 +13,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.io import load_rigid_body, load_samples
 from src.transforms import invert_transform, point_cloud_registration, transform_point
 
-DATA_ROOT = Path(".qodo/data/2025 PA345 Student Data")
+DATA_ROOT = Path("data/2025 PA345 Student Data")
 
 
 class TestPointCloudRegistration:

@@ -15,7 +15,7 @@ from src.io import load_mesh, load_rigid_body, load_samples
 from src.matching import compute_matches
 from src.models import RigidBody, SampleFrame
 
-DATA_ROOT = Path(".qodo/data/2025 PA345 Student Data")
+DATA_ROOT = Path("data/2025 PA345 Student Data")
 
 
 class TestComputeMatches:

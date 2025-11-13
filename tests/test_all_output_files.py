@@ -24,7 +24,7 @@ from src.pa3 import (  # noqa: E402
 )
 
 # Data directories
-DATA_ROOT = Path(".qodo/data/2025 PA345 Student Data")
+DATA_ROOT = Path("data/2025 PA345 Student Data")
 OUTPUT_ROOT = Path("output")
 
 DEBUG_DATASETS = (
