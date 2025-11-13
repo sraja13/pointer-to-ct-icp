@@ -1,0 +1,12 @@
+name: pointer-to-ct-icp
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - numpy
+  - pytest
+  - pip
+  - pip:
+    - # Add any pip-only dependencies here if needed
+
